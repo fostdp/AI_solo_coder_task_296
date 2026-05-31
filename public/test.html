@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分形树与风场模拟 - 测试套件</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #eee;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #4facfe;
+        }
+        .test-section {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .test-section h2 {
+            color: #00f2fe;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Consolas', monospace;
+        }
+        .pass {
+            background: rgba(34, 139, 34, 0.3);
+            border-left: 4px solid #32CD32;
+        }
+        .fail {
+            background: rgba(220, 20, 60, 0.3);
+            border-left: 4px solid #DC143C;
+        }
+        .info {
+            background: rgba(65, 105, 225, 0.3);
+            border-left: 4px solid #4169E1;
+        }
+        canvas {
+            border: 2px solid #4facfe;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 10px 5px;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4facfe, #00f2fe);
+            transition: width 0.3s;
+        }
+        .metric-box {
+            display: inline-block;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin: 5px;
+            text-align: center;
+        }
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4facfe;
+        }
+        .metric-label {
+            font-size: 0.8rem;
+            color: #aaa;
+        }
+        #logOutput {
+            background: #000;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Consolas', monospace;
+            font-size: 0.9rem;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+        .summary {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+        }
+        .summary h2 {
+            color: #fff;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 分形树与风场模拟 - 测试套件</h1>
+        
+        <div style="text-align: center; margin-bottom: 20px;">
+            <button onclick="runAllTests()">🚀 运行所有测试</button>
+            <button onclick="clearLogs()">🗑️ 清除日志</button>
+        </div>
+
+        <!-- 测试1: 递归深度栈溢出测试 -->
+        <div class="test-section">
+            <h2>📊 测试1: 递归深度栈溢出测试</h2>
+            <p>验证不同递归深度下的执行安全性，防止栈溢出</p>
+            <div id="test1Results"></div>
+            <canvas id="stackTestCanvas" width="400" height="300"></canvas>
+        </div>
+
+        <!-- 测试2: 树枝简谐运动验证 -->
+        <div class="test-section">
+            <h2>📊 测试2: 树枝简谐运动验证</h2>
+            <p>检查风场作用下的树枝摆动是否符合简谐运动近似</p>
+            <div id="test2Results"></div>
+            <canvas id="harmonicTestCanvas" width="600" height="200"></canvas>
+            <div id="harmonicMetrics"></div>
+        </div>
+
+        <!-- 测试3: 树叶粒子帧率性能测试 -->
+        <div class="test-section">
+            <h2>📊 测试3: 树叶粒子帧率性能测试</h2>
+            <p>测试不同树叶数量下的帧率表现</p>
+            <div id="test3Results"></div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="fpsProgress" style="width: 0%"></div>
+            </div>
+            <div id="fpsMetrics"></div>
+            <canvas id="fpsTestCanvas" width="600" height="150"></canvas>
+        </div>
+
+        <!-- 测试4: 后端截图异步处理测试 -->
+        <div class="test-section">
+            <h2>📊 测试4: 后端截图异步处理测试</h2>
+            <p>验证截图保存不阻塞主线程（UI响应性测试）</p>
+            <div id="test4Results"></div>
+            <canvas id="screenshotTestCanvas" width="400" height="300"></canvas>
+            <div id="asyncMetrics"></div>
+        </div>
+
+        <!-- 测试总结 -->
+        <div class="summary" id="testSummary" style="display: none;">
+            <h2>📋 测试总结报告</h2>
+            <div id="summaryContent"></div>
+        </div>
+
+        <!-- 日志输出 -->
+        <div class="test-section">
+            <h2>📝 测试日志</h2>
+            <div id="logOutput"></div>
+        </div>
+    </div>
+
+    <script src="test.js"></script>
+</body>
+</html>
